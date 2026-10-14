@@ -1,0 +1,139 @@
+@prefix pgo: <urn:kr:pension:ontology:> .
+@prefix pgr: <urn:kr:pension:resource:> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<urn:kr:pension:ontology:product> a owl:Ontology ;
+    owl:imports <urn:kr:pension:ontology:core>, <urn:kr:pension:ontology:pension> ;
+    dcterms:title "연금상품의 출처 연결 관측 온톨로지"@ko ;
+    dcterms:description "계좌 적격성·분류·비용·성과·위험·시장잔고의 의미 계약. 상품 금융 사실 적재나 검증 상태 승격을 수행하지 않는다."@ko ;
+    owl:versionInfo "0.1.0" .
+
+### Identity: reuse Fund, InvestmentProduct, Document and Organization ########
+
+pgo:Fund rdfs:comment "pension.ttl의 기존 펀드 본체 클래스. 파싱 파일 또는 파일 코드와 동일하지 않다."@ko .
+pgo:ShareClass a owl:Class ;
+    rdfs:subClassOf pgo:InvestmentProduct ;
+    rdfs:label "펀드 판매 클래스"@ko ;
+    skos:altLabel "판매클래스"@ko, "판매 클래스"@ko, "펀드 클래스"@ko ;
+    rdfs:comment "같은 펀드의 판매·보수 적용 단위. 펀드 본체와 별도 식별한다."@ko .
+pgo:DocumentVersion a owl:Class ;
+    rdfs:subClassOf pgo:Document ; rdfs:label "원문 문서 버전"@ko .
+pgo:shareClassOf a owl:ObjectProperty ;
+    rdfs:domain pgo:ShareClass ; rdfs:range pgo:Fund ; rdfs:label "소속 펀드"@ko .
+pgo:fundCode a owl:DatatypeProperty ;
+    rdfs:domain pgo:Fund ; rdfs:range xsd:string ; rdfs:label "펀드 식별 코드"@ko .
+pgo:shareClassCode a owl:DatatypeProperty ;
+    rdfs:domain pgo:ShareClass ; rdfs:range xsd:string ; rdfs:label "펀드 내 클래스 코드"@ko .
+pgo:managedBy a owl:ObjectProperty ;
+    rdfs:domain pgo:Fund ; rdfs:range pgo:Organization ; rdfs:label "운용 기관"@ko .
+pgo:versionOf a owl:ObjectProperty ;
+    rdfs:domain pgo:DocumentVersion ; rdfs:range pgo:InformationResource ;
+    rdfs:label "버전이 속한 논리적 문서 자원"@ko ;
+    rdfs:comment "ProductSource와 같은 파일 카탈로그에 연결한다. 펀드 본체로 추론하지 않는다."@ko .
+pgo:documentEffectiveDate a owl:DatatypeProperty ;
+    rdfs:domain pgo:DocumentVersion ; rdfs:range xsd:date ; rdfs:label "문서 효력발생일"@ko .
+pgo:describesFund a owl:ObjectProperty ;
+    rdfs:domain pgo:DocumentVersion ; rdfs:range pgo:Fund ; rdfs:label "문서가 설명하는 펀드"@ko .
+
+### Six observation axes; not unconditional product properties ###############
+
+pgo:ProductObservation a owl:Class ;
+    rdfs:subClassOf pgo:Assertion, prov:Entity ;
+    rdfs:label "출처 연결 상품 관측"@ko ;
+    rdfs:comment "한 문서 버전에서 추출한 한 범위의 관측. Candidate도 포함하며 SHACL 통과는 의미 검증이나 운영 DB 적재 승인이 아니다."@ko .
+pgo:AccountEligibility a owl:Class ;
+    rdfs:subClassOf pgo:ProductObservation ; rdfs:label "클래스별 계좌 적격성 관측"@ko ;
+    skos:altLabel "계좌 적격성"@ko, "가입 가능 계좌"@ko, "매수 가능 계좌"@ko ;
+    rdfs:comment "EligibilityRule 정의 자체가 아니라 특정 클래스·계좌유형·기준일에서 관측한 결과. 미공개는 금지와 다르다."@ko .
+pgo:ProductClassification a owl:Class ;
+    rdfs:subClassOf pgo:ProductObservation ; rdfs:label "상품 분류 관측"@ko ;
+    skos:altLabel "상품 분류"@ko, "상품 유형"@ko, "자산 분류"@ko .
+pgo:FeeObservation a owl:Class ;
+    rdfs:subClassOf pgo:ProductObservation ; rdfs:label "클래스별 보수·수수료 관측"@ko ;
+    skos:altLabel "보수"@ko, "수수료"@ko, "총보수"@ko .
+pgo:ReturnObservation a owl:Class ;
+    rdfs:subClassOf pgo:ProductObservation ; rdfs:label "클래스별 기간 수익률 관측"@ko ;
+    skos:altLabel "수익률"@ko, "기간 수익률"@ko, "연환산 수익률"@ko .
+pgo:RiskObservation a owl:Class ;
+    rdfs:subClassOf pgo:ProductObservation ; rdfs:label "상품 또는 클래스 위험등급 관측"@ko ;
+    skos:altLabel "위험등급"@ko, "위험 등급"@ko .
+pgo:AUMObservation a owl:Class ;
+    rdfs:subClassOf pgo:ProductObservation ; rdfs:label "상품 또는 클래스 시장잔고 관측"@ko ;
+    skos:altLabel "순자산"@ko, "순자산총액"@ko, "시장잔고"@ko .
+
+# Lexical hints select optional type context only. They are not financial
+# evidence, equivalence axioms, eligibility rules, or answer approval gates.
+
+pgo:observedSubject a owl:ObjectProperty ;
+    rdfs:domain pgo:ProductObservation ; rdfs:range pgo:InvestmentProduct ;
+    rdfs:label "관측 귀속 대상"@ko .
+pgo:observedValue a owl:ObjectProperty ;
+    rdfs:domain pgo:ProductObservation ; rdfs:range pgo:QuantifiedValue ;
+    rdfs:label "관측 수량"@ko ;
+    rdfs:comment "core의 hasQuantifiedValue는 Rule 도메인이므로 관측을 Rule로 추론하지 않도록 별도 관계를 사용한다."@ko .
+pgo:observedPeriod a owl:ObjectProperty ;
+    rdfs:domain pgo:ProductObservation ; rdfs:range pgo:TemporalExtent ; rdfs:label "측정 기간"@ko .
+pgo:sourceDocumentVersion a owl:ObjectProperty ;
+    rdfs:domain pgo:ProductObservation ; rdfs:range pgo:DocumentVersion ; rdfs:label "관측의 원문 버전"@ko .
+pgo:rawValue a owl:DatatypeProperty ;
+    rdfs:domain pgo:QuantifiedValue ; rdfs:range xsd:string ; rdfs:label "수량의 원문 표기"@ko .
+pgo:scopeText a owl:DatatypeProperty ;
+    rdfs:domain pgo:ProductObservation ; rdfs:range xsd:string ; rdfs:label "원문 적용 조건·예외"@ko .
+
+pgo:accountType a owl:ObjectProperty ;
+    rdfs:domain pgo:AccountEligibility ; rdfs:range pgo:DomainConcept ; rdfs:label "적격성 대상 계좌·제도 유형"@ko .
+pgo:eligibilityOutcome a owl:DatatypeProperty ;
+    rdfs:domain pgo:AccountEligibility ; rdfs:range xsd:string ; rdfs:label "허용·금지·조건부·미공개·비적용"@ko .
+pgo:classificationAxis a owl:DatatypeProperty ;
+    rdfs:domain pgo:ProductClassification ; rdfs:range xsd:string ; rdfs:label "분류 축"@ko .
+pgo:category a owl:ObjectProperty ;
+    rdfs:domain pgo:ProductClassification ; rdfs:range pgo:DomainConcept ; rdfs:label "관측된 분류 개념"@ko .
+pgo:feeType a owl:DatatypeProperty ;
+    rdfs:domain pgo:FeeObservation ; rdfs:range xsd:string ; rdfs:label "비용 항목 코드"@ko .
+pgo:feeBasis a owl:DatatypeProperty ;
+    rdfs:domain pgo:FeeObservation ; rdfs:range xsd:string ; rdfs:label "비용의 연율·일회·금액 기준"@ko .
+pgo:returnBasis a owl:DatatypeProperty ;
+    rdfs:domain pgo:ReturnObservation ; rdfs:range xsd:string ; rdfs:label "기간 누적·연환산 구별"@ko .
+pgo:returnTreatment a owl:DatatypeProperty ;
+    rdfs:domain pgo:ReturnObservation ; rdfs:range xsd:string ; rdfs:label "세전·세후·비용·분배금 처리의 원문 설명"@ko .
+pgo:ratingScale a owl:ObjectProperty ;
+    rdfs:domain pgo:RiskObservation ; rdfs:range pgo:DomainConcept ; rdfs:label "위험등급 척도"@ko .
+pgo:scaleMinimum a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "척도 최솟값"@ko .
+pgo:scaleMaximum a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "척도 최댓값"@ko .
+pgo:higherRiskDirection a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "위험 증가 시 등급 숫자의 방향"@ko .
+pgo:aumMeasure a owl:DatatypeProperty ;
+    rdfs:domain pgo:AUMObservation ; rdfs:range xsd:string ; rdfs:label "순자산·총자산·설정원본 구별"@ko .
+
+### Provenance quality is separate from assertion status / contradiction #####
+
+pgo:evidenceOrigin a owl:ObjectProperty ;
+    rdfs:domain pgo:EvidenceSpan ; rdfs:range pgo:DomainConcept ;
+    rdfs:label "근거 구간의 생성 출처"@ko .
+pgo:startChar a owl:DatatypeProperty ;
+    rdfs:domain pgo:InformationResource ; rdfs:range xsd:nonNegativeInteger ; rdfs:label "원문 Unicode 문자 시작 오프셋"@ko .
+pgo:endChar a owl:DatatypeProperty ;
+    rdfs:domain pgo:InformationResource ; rdfs:range xsd:nonNegativeInteger ;
+    rdfs:label "원문 Unicode 문자 종료 오프셋(포함하지 않음)"@ko .
+pgo:sourceLocator a owl:DatatypeProperty ;
+    rdfs:domain pgo:EvidenceSpan ; rdfs:range xsd:string ; rdfs:label "원문 절·표·행·열 위치 설명"@ko .
+
+pgr:SourceTranscription a pgo:DomainConcept ; skos:prefLabel "원문 파싱 전사"@ko .
+pgr:ReviewedVisualTranscription a pgo:DomainConcept ; skos:prefLabel "검토 이력이 있는 시각 전사"@ko .
+pgr:SyntheticCaption a pgo:DomainConcept ; skos:prefLabel "합성 그림 설명"@ko .
+pgr:ProcessingMarker a pgo:DomainConcept ; skos:prefLabel "처리 흔적"@ko .
+pgr:UnresolvedCaptionOrigin a pgo:DomainConcept ; skos:prefLabel "생성 출처 미확인 캡션"@ko .
+
+# Account concepts denote existing classes; they are not customer accounts.
+pgr:ProductAccountIRP a pgo:DomainConcept ; skos:prefLabel "IRP 유형"@ko ; pgo:denotesClass pgo:IndividualRetirementPension .
+pgr:ProductAccountPensionSavings a pgo:DomainConcept ; skos:prefLabel "연금저축 유형"@ko ; pgo:denotesClass pgo:PensionSavingsAccount .
+pgr:ProductAccountDB a pgo:DomainConcept ; skos:prefLabel "DB 유형"@ko ; pgo:denotesClass pgo:DefinedBenefitPension .
+pgr:ProductAccountDC a pgo:DomainConcept ; skos:prefLabel "DC 유형"@ko ; pgo:denotesClass pgo:DefinedContributionPension .
+
+# Reuse pgo:hasStatus, pgr:Candidate/NeedsReview/Validated/Rejected/Superseded,
+# pgo:supportedBy, pgo:contradicts and pgo:supersedes from core.ttl.
+# No rule here asserts eligibility, promotes statuses, or overwrites observations.

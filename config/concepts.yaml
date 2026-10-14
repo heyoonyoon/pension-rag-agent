@@ -1,0 +1,105 @@
+concepts:
+  - id: individual-retirement-pension
+    label: 개인형 퇴직연금
+    ontology_class: IndividualRetirementPension
+    aliases: [IRP, 개인IRP, 개인형퇴직연금, 개인형 퇴직연금]
+  - id: defined-benefit-pension
+    label: 확정급여형 퇴직연금
+    ontology_class: DefinedBenefitPension
+    aliases: [DB, DB형, DB 형, 확정급여형, 확정급여형퇴직연금]
+  - id: defined-contribution-pension
+    label: 확정기여형 퇴직연금
+    ontology_class: DefinedContributionPension
+    aliases: [DC, DC형, DC 형, 확정기여형, 확정기여형퇴직연금]
+  - id: pension-savings-account
+    label: 연금저축계좌
+    ontology_class: PensionSavingsAccount
+    aliases: [연금저축계좌, 연금저축, 연금 계좌]
+  - id: legacy-personal-pension-savings
+    label: 개인연금저축
+    ontology_class: LegacyPersonalPensionSavings
+    aliases: [개인연금저축, 개인 연금저축]
+  - id: early-withdrawal
+    label: 중도인출
+    ontology_class: EarlyWithdrawal
+    aliases: [중도인출, 중도 인출, 일부 인출]
+  - id: pension-payment
+    label: 연금수령
+    ontology_class: PensionPayment
+    aliases: [연금수령, 연금 수령, 연금지급, 연금 지급]
+  - id: pension-commencement
+    label: 연금개시
+    ontology_class: PensionCommencement
+    aliases: [연금개시, 연금 개시, 개시신청]
+  - id: account-termination
+    label: 계좌 해지
+    ontology_class: AccountTermination
+    aliases: [계좌 해지, 계좌해지, 중도해지, 전액 해지]
+  - id: account-transfer
+    label: 계약이전
+    ontology_class: AccountTransfer
+    aliases: [계약이전, 계약 이전, 계좌이체, 이전 신청, 이수관]
+  - id: account-succession
+    label: 계좌 승계
+    ontology_class: AccountSuccession
+    aliases: [계좌승계, 계좌 승계, 배우자 승계, 상속]
+  - id: contribution
+    label: 부담금 납입
+    ontology_class: Contribution
+    aliases: [부담금, 추가납입, 추가 납입, 입금]
+  - id: tax-deduction
+    label: 세액공제
+    ontology_class: TaxDeduction
+    aliases: [세액공제, 세액 공제, 소득공제, 공제혜택]
+  - id: pension-income-tax
+    label: 연금소득세
+    ontology_class: PensionIncomeTax
+    aliases: [연금소득세, 연금 소득세]
+  - id: retirement-income-tax
+    label: 퇴직소득세
+    ontology_class: RetirementIncomeTax
+    aliases: [퇴직소득세, 퇴직 소득세, 이연퇴직소득세]
+  - id: other-income-tax
+    label: 기타소득세
+    ontology_class: OtherIncomeTax
+    aliases: [기타소득세, 기타 소득세]
+  - id: unavoidable-reason
+    label: 부득이한 사유
+    ontology_class: UnavoidableReason
+    aliases: [부득이한 사유, 부득이한사유]
+  - id: statutory-withdrawal-reason
+    label: 법정 중도인출 사유
+    ontology_class: StatutoryWithdrawalReason
+    aliases: [중도인출 사유, 중도 인출 사유]
+  - id: risk-asset
+    label: 위험자산
+    ontology_class: RiskAsset
+    aliases: [위험자산, 위험 자산]
+  - id: target-date-fund
+    label: 타깃데이트펀드
+    ontology_class: TargetDateFund
+    aliases: [TDF, 타깃데이트펀드, 타겟데이트펀드]
+  - id: exchange-traded-fund
+    label: 상장지수펀드
+    ontology_class: ExchangeTradedFund
+    aliases: [ETF, 상장지수펀드]
+  - id: exchange-traded-note
+    label: 상장지수증권
+    ontology_class: ExchangeTradedNote
+    aliases: [ETN, 상장지수증권]
+  - id: real-estate-investment-trust
+    label: 리츠
+    ontology_class: RealEstateInvestmentTrust
+    aliases: [리츠, REIT, 부동산투자회사]
+  - id: bond
+    label: 채권
+    ontology_class: Bond
+    aliases: [채권, 장외채권, 국채, 회사채]
+  - id: default-option
+    label: 디폴트옵션
+    ontology_class: DefaultOption
+    aliases: [디폴트옵션, 사전지정운용방법]
+  - id: rebalancing
+    label: 리밸런싱
+    ontology_class: Rebalancing
+    aliases: [리밸런싱, 자산배분]

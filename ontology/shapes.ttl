@@ -1,0 +1,59 @@
+@prefix pgo: <urn:kr:pension:ontology:> .
+@prefix pgr: <urn:kr:pension:resource:> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+pgo:DocumentShape a sh:NodeShape ;
+    sh:targetClass pgo:Document ;
+    sh:closed false ;
+    sh:property [ sh:path pgo:sourceId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path pgo:checksum ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^[0-9a-f]{64}$" ] .
+
+pgo:TextChunkShape a sh:NodeShape ;
+    sh:targetClass pgo:TextChunk ;
+    sh:closed false ;
+    sh:property [ sh:path pgo:chunkId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path pgo:content ; sh:minCount 1 ; sh:maxCount 1 ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:chunkIndex ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:nonNegativeInteger ] ;
+    sh:property [ sh:path pgo:partOfDocument ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:Document ] ;
+    sh:property [ sh:path pgo:checksum ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^[0-9a-f]{64}$" ] .
+
+pgo:EvidenceSpanShape a sh:NodeShape ;
+    sh:targetClass pgo:EvidenceSpan ;
+    sh:property [ sh:path pgo:quote ; sh:minCount 1 ; sh:maxCount 1 ; sh:minLength 2 ] ;
+    sh:property [ sh:path pgo:inChunk ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:TextChunk ] .
+
+pgo:ClaimShape a sh:NodeShape ;
+    sh:targetClass pgo:Claim ;
+    sh:property [ sh:path pgo:assertionId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path rdf:subject ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path rdf:predicate ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ] ;
+    sh:property [ sh:path rdf:object ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path pgo:supportedBy ; sh:minCount 1 ; sh:class pgo:EvidenceSpan ] ;
+    sh:property [ sh:path pgo:hasStatus ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:AssertionStatus ] ;
+    sh:property [ sh:path pgo:confidence ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:maxInclusive 1 ] .
+
+pgo:RuleShape a sh:NodeShape ;
+    sh:targetClass pgo:Rule ;
+    sh:property [ sh:path pgo:assertionId ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path pgo:statementText ; sh:minCount 1 ; sh:minLength 3 ] ;
+    sh:property [ sh:path pgo:supportedBy ; sh:minCount 1 ; sh:class pgo:EvidenceSpan ] ;
+    sh:property [ sh:path pgo:appliesTo ; sh:minCount 1 ] .
+
+pgo:QuantifiedValueShape a sh:NodeShape ;
+    sh:targetClass pgo:QuantifiedValue ;
+    sh:property [ sh:path pgo:numericValue ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path pgo:unitCode ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .
+
+pgo:DataTableShape a sh:NodeShape ;
+    sh:targetClass pgo:DataTable ;
+    sh:property [ sh:path pgo:tableId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path pgo:inSourceChunk ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:TextChunk ] ;
+    sh:property [ sh:path pgo:hasRow ; sh:minCount 1 ; sh:class pgo:TableRow ] .
+
+pgo:TableCellShape a sh:NodeShape ;
+    sh:targetClass pgo:TableCell ;
+    sh:property [ sh:path pgo:columnIndex ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:nonNegativeInteger ] ;
+    sh:property [ sh:path pgo:columnHeader ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path pgo:cellValue ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] .

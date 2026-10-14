@@ -1,0 +1,72 @@
+node_types:
+  PensionScheme:
+    description: 연금 제도 또는 계좌 유형
+    required: [id, name]
+  PersonRole:
+    description: 가입자, 근로자, 사용자, 부양가족 등 사람의 자격 또는 역할
+    required: [id, name]
+  FinancialEvent:
+    description: 납입, 인출, 해지, 이전, 연금수령 등 업무 사건
+    required: [id, name]
+  InvestmentProduct:
+    description: 펀드, ETF, 채권, TDF 등 운용상품 유형
+    required: [id, name]
+  Tax:
+    description: 연금소득세, 기타소득세, 퇴직소득세 등 세금 유형
+    required: [id, name]
+  Condition:
+    description: 규칙이 적용되는 명시적 조건 또는 사유
+    required: [id, name]
+  Rule:
+    description: 문서에 명시된 자격, 인출, 세금, 투자한도, 계산, 절차 규칙
+    required: [id, statement, source_id, chunk_id, evidence_quote]
+  LegalInstrument:
+    description: 법률, 시행령, 시행규칙 또는 법령 조항
+    required: [id, name]
+  QuantifiedValue:
+    description: 금액, 비율, 기간, 연령처럼 단위가 있는 수치
+    required: [id, value, unit]
+  RequiredDocument:
+    description: 업무 처리 또는 자격 입증에 필요한 서류
+    required: [id, name]
+  ServiceChannel:
+    description: 영업점, 유선, 홈페이지, 모바일 앱 등 업무 접수 채널
+    required: [id, name]
+
+relationship_types:
+  ELIGIBLE_FOR: {from: [PersonRole], to: [PensionScheme]}
+  ALLOWS_EVENT: {from: [PensionScheme], to: [FinancialEvent]}
+  PROHIBITS_EVENT: {from: [PensionScheme], to: [FinancialEvent]}
+  ALLOWS_INVESTMENT_IN: {from: [PensionScheme], to: [InvestmentProduct]}
+  PROHIBITS_INVESTMENT_IN: {from: [PensionScheme], to: [InvestmentProduct]}
+  TAXED_BY: {from: [FinancialEvent], to: [Tax]}
+  HAS_CONDITION: {from: [Rule], to: [Condition]}
+  PERMITS_EVENT: {from: [Rule], to: [FinancialEvent]}
+  FORBIDS_EVENT: {from: [Rule], to: [FinancialEvent]}
+  REQUIRES_EVENT: {from: [Rule], to: [FinancialEvent]}
+  PERMITS_INVESTMENT: {from: [Rule], to: [InvestmentProduct]}
+  FORBIDS_INVESTMENT: {from: [Rule], to: [InvestmentProduct]}
+  IMPOSES_TAX: {from: [Rule], to: [Tax]}
+  EXEMPTS_TAX: {from: [Rule], to: [Tax]}
+  HAS_VALUE: {from: [Rule], to: [QuantifiedValue]}
+  APPLIES_TO: {from: [Rule], to: [PensionScheme, PersonRole, FinancialEvent, InvestmentProduct]}
+  GOVERNED_BY: {from: [PensionScheme, FinancialEvent, Rule], to: [LegalInstrument]}
+  REQUIRES_DOCUMENT: {from: [Rule], to: [RequiredDocument]}
+  AVAILABLE_VIA: {from: [Rule], to: [ServiceChannel]}
+
+extraction_policy:
+  schema_is_allowlist: true
+  every_rule_requires_exact_quote: true
+  every_relation_requires_chunk_id: true
+  retain_uncertain_as_candidate: true
+  minimum_evidence_characters: 8
+  auto_accept_confidence: 0.8
+  conditioned_direct_relationships: [ALLOWS_EVENT, PROHIBITS_EVENT]
+  condition_cues: [원칙적으로, 경우, 사유, 해당, 이내, 이상, 이하, 초과, 미만, 이전, 이후]
+  strict_entity_aliases:
+    Tax: [연금소득세, 연금 소득세, 퇴직소득세, 퇴직 소득세, 이연퇴직소득세, 기타소득세, 기타 소득세, 이자소득세, 이자 소득세]
+  forbidden:
+    - 문서에 없는 상식이나 추론을 사실로 추가하기
+    - 서로 다른 문서의 조건을 하나의 규칙으로 합치기
+    - 날짜나 단위가 다른 수치를 덮어쓰기
+    - 근거 인용문을 고쳐 쓰기

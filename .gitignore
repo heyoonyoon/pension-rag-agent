@@ -1,0 +1,22 @@
+# 대회 데이터와 가공 결과물은 절대 올리지 않습니다
+원본/
+docs_renamed/
+투자설명서/
+raw_markdown/
+data/
+evaluation/
+tests/fixtures/
+deploy/
+tmp/
+
+# 비밀 값
+.env
+
+# 빌드와 캐시
+__pycache__/
+*.pyc
+.venv/
+.cache/
+web/node_modules/
+web/dist/
+web/.next/

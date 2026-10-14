@@ -1,0 +1,181 @@
+@prefix pgo: <urn:kr:pension:ontology:> .
+@prefix pgr: <urn:kr:pension:resource:> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<urn:kr:pension:ontology:core> a owl:Ontology ;
+    dcterms:title "Korean Pension Graph Ontology - Core"@en,
+        "한국 연금 그래프 온톨로지 - 코어"@ko ;
+    dcterms:description "문서 근거, 주장, 규칙, 시간, 수량을 표현하는 공통 의미 모델"@ko ;
+    owl:versionInfo "0.2.0" .
+
+### Evidence and provenance ####################################################
+
+pgo:InformationResource a owl:Class ; rdfs:label "정보 자원"@ko .
+pgo:Document a owl:Class ;
+    rdfs:subClassOf pgo:InformationResource, prov:Entity ;
+    rdfs:label "문서"@ko .
+pgo:DocumentSection a owl:Class ;
+    rdfs:subClassOf pgo:InformationResource ;
+    rdfs:label "문서 절"@ko .
+pgo:TextChunk a owl:Class ;
+    rdfs:subClassOf pgo:InformationResource ;
+    rdfs:label "원문 청크"@ko .
+pgo:EvidenceSpan a owl:Class ;
+    rdfs:subClassOf pgo:InformationResource ;
+    rdfs:label "근거 인용 구간"@ko .
+pgo:DomainConcept a owl:Class ;
+    rdfs:label "검색용 도메인 개념"@ko .
+pgo:DataTable a owl:Class ;
+    rdfs:subClassOf pgo:InformationResource ; rdfs:label "원문 표"@ko .
+pgo:TableRow a owl:Class ; rdfs:label "표 행"@ko .
+pgo:TableCell a owl:Class ; rdfs:label "표 셀"@ko .
+pgo:ExtractionActivity a owl:Class ;
+    rdfs:subClassOf prov:Activity ;
+    rdfs:label "정보 추출 활동"@ko .
+
+pgo:sourceId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain pgo:Document ; rdfs:range xsd:string ; rdfs:label "출처 ID"@ko .
+pgo:chunkId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain pgo:TextChunk ; rdfs:range xsd:string ; rdfs:label "청크 ID"@ko .
+pgo:content a owl:DatatypeProperty ;
+    rdfs:range xsd:string ; rdfs:label "원문 내용"@ko .
+pgo:headingPath a owl:DatatypeProperty ;
+    rdfs:domain pgo:TextChunk ; rdfs:range xsd:string ; rdfs:label "제목 경로"@ko .
+pgo:startLine a owl:DatatypeProperty ;
+    rdfs:domain pgo:TextChunk ; rdfs:range xsd:positiveInteger ; rdfs:label "시작 줄"@ko .
+pgo:endLine a owl:DatatypeProperty ;
+    rdfs:domain pgo:TextChunk ; rdfs:range xsd:positiveInteger ; rdfs:label "종료 줄"@ko .
+pgo:chunkIndex a owl:DatatypeProperty ;
+    rdfs:domain pgo:TextChunk ; rdfs:range xsd:nonNegativeInteger ; rdfs:label "청크 순번"@ko .
+pgo:checksum a owl:DatatypeProperty ;
+    rdfs:range xsd:string ; rdfs:label "SHA-256 체크섬"@ko .
+pgo:quote a owl:DatatypeProperty ;
+    rdfs:domain pgo:EvidenceSpan ; rdfs:range xsd:string ; rdfs:label "근거 인용문"@ko .
+pgo:partOfDocument a owl:ObjectProperty ;
+    rdfs:domain pgo:InformationResource ; rdfs:range pgo:Document ;
+    rdfs:subPropertyOf dcterms:isPartOf ; rdfs:label "문서에 속함"@ko .
+pgo:nextChunk a owl:ObjectProperty, owl:IrreflexiveProperty ;
+    rdfs:domain pgo:TextChunk ; rdfs:range pgo:TextChunk ; rdfs:label "다음 청크"@ko .
+pgo:inChunk a owl:ObjectProperty ;
+    rdfs:domain pgo:EvidenceSpan ; rdfs:range pgo:TextChunk ; rdfs:label "청크 안에 있음"@ko .
+pgo:mentions a owl:ObjectProperty ;
+    rdfs:domain pgo:TextChunk ; rdfs:range pgo:DomainConcept ; rdfs:label "개념을 언급함"@ko .
+pgo:denotesClass a owl:ObjectProperty ;
+    rdfs:domain pgo:DomainConcept ; rdfs:range owl:Class ; rdfs:label "온톨로지 클래스를 가리킴"@ko .
+pgo:matchedText a owl:DatatypeProperty ;
+    rdfs:range xsd:string ; rdfs:label "원문에서 일치한 표현"@ko .
+pgo:mentionCount a owl:DatatypeProperty ;
+    rdfs:range xsd:positiveInteger ; rdfs:label "청크 내 언급 횟수"@ko .
+pgo:tableId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain pgo:DataTable ; rdfs:range xsd:string ; rdfs:label "표 ID"@ko .
+pgo:rowIndex a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain pgo:TableRow ; rdfs:range xsd:nonNegativeInteger ; rdfs:label "행 순번"@ko .
+pgo:columnIndex a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain pgo:TableCell ; rdfs:range xsd:nonNegativeInteger ; rdfs:label "열 순번"@ko .
+pgo:columnHeader a owl:DatatypeProperty ;
+    rdfs:domain pgo:TableCell ; rdfs:range xsd:string ; rdfs:label "열 제목"@ko .
+pgo:cellValue a owl:DatatypeProperty ;
+    rdfs:domain pgo:TableCell ; rdfs:range xsd:string ; rdfs:label "셀 원문 값"@ko .
+pgo:rawTable a owl:DatatypeProperty ;
+    rdfs:domain pgo:DataTable ; rdfs:range xsd:string ; rdfs:label "표 원문"@ko .
+pgo:inSourceChunk a owl:ObjectProperty ;
+    rdfs:domain pgo:DataTable ; rdfs:range pgo:TextChunk ; rdfs:label "원문 청크 안에 있음"@ko .
+pgo:hasRow a owl:ObjectProperty ;
+    rdfs:domain pgo:DataTable ; rdfs:range pgo:TableRow ; rdfs:label "표 행을 가짐"@ko .
+pgo:hasCell a owl:ObjectProperty ;
+    rdfs:domain pgo:TableRow ; rdfs:range pgo:TableCell ; rdfs:label "행이 셀을 가짐"@ko .
+
+### Assertions and rules ######################################################
+
+pgo:Assertion a owl:Class ; rdfs:label "검증 대상 진술"@ko .
+pgo:Claim a owl:Class ;
+    rdfs:subClassOf pgo:Assertion, rdf:Statement, prov:Entity ;
+    rdfs:label "근거가 연결된 주장"@ko .
+pgo:Rule a owl:Class ;
+    rdfs:subClassOf pgo:Assertion ; rdfs:label "업무 규칙"@ko .
+pgo:EligibilityRule a owl:Class ;
+    rdfs:subClassOf pgo:Rule ; rdfs:label "자격 규칙"@ko .
+pgo:WithdrawalRule a owl:Class ;
+    rdfs:subClassOf pgo:Rule ; rdfs:label "인출 규칙"@ko .
+pgo:TaxRule a owl:Class ;
+    rdfs:subClassOf pgo:Rule ; rdfs:label "과세 규칙"@ko .
+pgo:InvestmentLimitRule a owl:Class ;
+    rdfs:subClassOf pgo:Rule ; rdfs:label "투자 한도 규칙"@ko .
+pgo:CalculationRule a owl:Class ;
+    rdfs:subClassOf pgo:Rule ; rdfs:label "계산 규칙"@ko .
+pgo:ProcedureRule a owl:Class ;
+    rdfs:subClassOf pgo:Rule ; rdfs:label "업무 절차 규칙"@ko .
+pgo:Condition a owl:Class ; rdfs:label "적용 조건"@ko .
+pgo:Exception a owl:Class ; rdfs:label "예외"@ko .
+pgo:AssertionStatus a owl:Class ; rdfs:label "진술 상태"@ko .
+
+pgr:Candidate a pgo:AssertionStatus ; skos:prefLabel "후보"@ko .
+pgr:Validated a pgo:AssertionStatus ; skos:prefLabel "검증 통과"@ko .
+pgr:Rejected a pgo:AssertionStatus ; skos:prefLabel "거부"@ko .
+pgr:NeedsReview a pgo:AssertionStatus ; skos:prefLabel "사람 검토 필요"@ko .
+pgr:Superseded a pgo:AssertionStatus ; skos:prefLabel "새 규칙으로 대체됨"@ko .
+
+pgo:assertionId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain pgo:Assertion ; rdfs:range xsd:string ; rdfs:label "진술 ID"@ko .
+pgo:statementText a owl:DatatypeProperty ;
+    rdfs:domain pgo:Assertion ; rdfs:range xsd:string ; rdfs:label "진술문"@ko .
+pgo:hasStatus a owl:ObjectProperty, owl:FunctionalProperty ;
+    rdfs:domain pgo:Assertion ; rdfs:range pgo:AssertionStatus ; rdfs:label "검증 상태"@ko .
+pgo:supportedBy a owl:ObjectProperty ;
+    rdfs:domain pgo:Assertion ; rdfs:range pgo:EvidenceSpan ; rdfs:label "근거로 뒷받침됨"@ko .
+pgo:contradicts a owl:ObjectProperty, owl:SymmetricProperty ;
+    rdfs:domain pgo:Assertion ; rdfs:range pgo:Assertion ; rdfs:label "서로 충돌함"@ko .
+pgo:supersedes a owl:ObjectProperty, owl:TransitiveProperty ;
+    rdfs:domain pgo:Assertion ; rdfs:range pgo:Assertion ; rdfs:label "이전 진술을 대체함"@ko .
+pgo:hasCondition a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:Condition ; rdfs:label "적용 조건"@ko .
+pgo:hasException a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:Exception ; rdfs:label "예외 조건"@ko .
+pgo:appliesTo a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:label "적용 대상"@ko .
+pgo:legalBasis a owl:ObjectProperty ;
+    rdfs:domain pgo:Assertion ; rdfs:range pgo:LegalProvision ; rdfs:label "법적 근거"@ko .
+pgo:confidence a owl:DatatypeProperty ;
+    rdfs:domain pgo:Assertion ; rdfs:range xsd:decimal ; rdfs:label "추출 신뢰도"@ko .
+
+### Time, quantities, law, and actors ########################################
+
+pgo:TemporalExtent a owl:Class ; rdfs:label "유효 기간"@ko .
+pgo:QuantifiedValue a owl:Class ; rdfs:label "단위가 있는 수치"@ko .
+pgo:MonetaryAmount a owl:Class ;
+    rdfs:subClassOf pgo:QuantifiedValue ; rdfs:label "금액"@ko .
+pgo:Percentage a owl:Class ;
+    rdfs:subClassOf pgo:QuantifiedValue ; rdfs:label "비율"@ko .
+pgo:Duration a owl:Class ;
+    rdfs:subClassOf pgo:QuantifiedValue ; rdfs:label "기간"@ko .
+pgo:AgeThreshold a owl:Class ;
+    rdfs:subClassOf pgo:QuantifiedValue ; rdfs:label "연령 기준"@ko .
+pgo:LegalInstrument a owl:Class ; rdfs:label "법령"@ko .
+pgo:LegalProvision a owl:Class ; rdfs:label "법령 조항"@ko .
+pgo:Organization a owl:Class ; rdfs:label "기관"@ko .
+pgo:PersonRole a owl:Class ; rdfs:label "사람의 역할"@ko .
+pgo:FinancialProduct a owl:Class ; rdfs:label "금융상품"@ko .
+pgo:FinancialAccount a owl:Class ; rdfs:label "금융계좌"@ko .
+pgo:FinancialEvent a owl:Class ; rdfs:label "금융 사건"@ko .
+pgo:RequiredDocument a owl:Class ; rdfs:label "필요 서류"@ko .
+pgo:ServiceChannel a owl:Class ; rdfs:label "업무 접수 채널"@ko .
+
+pgo:validFrom a owl:DatatypeProperty ; rdfs:range xsd:date ; rdfs:label "유효 시작일"@ko .
+pgo:validThrough a owl:DatatypeProperty ; rdfs:range xsd:date ; rdfs:label "유효 종료일"@ko .
+pgo:asOfDate a owl:DatatypeProperty ; rdfs:range xsd:date ; rdfs:label "기준일"@ko .
+pgo:numericValue a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain pgo:QuantifiedValue ; rdfs:range xsd:decimal ; rdfs:label "수치"@ko .
+pgo:unitCode a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain pgo:QuantifiedValue ; rdfs:range xsd:string ; rdfs:label "단위 코드"@ko .
+pgo:comparisonOperator a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain pgo:QuantifiedValue ; rdfs:range xsd:string ; rdfs:label "비교 연산자"@ko .
+pgo:hasQuantifiedValue a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:QuantifiedValue ; rdfs:label "정량 기준"@ko .
+pgo:hasProvision a owl:ObjectProperty ;
+    rdfs:domain pgo:LegalInstrument ; rdfs:range pgo:LegalProvision ; rdfs:label "조항을 가짐"@ko .

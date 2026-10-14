@@ -1,0 +1,119 @@
+services:
+  neo4j:
+    image: neo4j:2026.07.1
+    restart: unless-stopped
+    ports:
+      - "7475:7474"
+      - "7688:7687"
+    environment:
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD:?set NEO4J_PASSWORD in .env}"
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 1g
+      NEO4J_server_memory_pagecache_size: 1g
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p \"$${NEO4J_AUTH#neo4j/}\" 'RETURN 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  qdrant:
+    image: qdrant/qdrant:v1.19.0
+    restart: unless-stopped
+    ports:
+      - "6335:6333"
+      - "6336:6334"
+    environment:
+      QDRANT__SERVICE__API_KEY: "${QDRANT_API_KEY:?set QDRANT_API_KEY in .env}"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  dense-embedding:
+    # Official docs list cpu-arm64-1.9, but that tag was not published as of 2026-08.
+    # Pin the published official ARM64 commit image and its registry digest instead.
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-arm64-sha-4150561@sha256:35c50d7494de22deecdb783b8f5b7e1d05765709bd90071b03469b9440d28656
+    restart: unless-stopped
+    command:
+      - --model-id
+      - Qwen/Qwen3-Embedding-0.6B
+      - --revision
+      - 97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3
+      - --dtype
+      # ARM64 CPU Candle warm-up restarts with float16; CPU inference requires float32.
+      - float32
+      - --auto-truncate
+      # The corpus segments are short; limiting warm-up/batch tokens avoids an 8 GiB
+      # Docker Desktop VM OOM while leaving ample headroom for each request.
+      - --max-batch-tokens
+      - "2048"
+      - --max-client-batch-size
+      - "4"
+    ports:
+      - "8081:80"
+    volumes:
+      - dense_embedding_models:/data
+
+  rag-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pension-rag-api:0.1.0
+    restart: unless-stopped
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      dense-embedding:
+        condition: service_started
+    ports:
+      - "${RAG_API_PORT:-8080}:8080"
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: "${NEO4J_PASSWORD:?set NEO4J_PASSWORD in .env}"
+      NEO4J_DATABASE: "${NEO4J_DATABASE:-neo4j}"
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_API_KEY: "${QDRANT_API_KEY:?set QDRANT_API_KEY in .env}"
+      QDRANT_COLLECTION: "${QDRANT_COLLECTION:-pension_chunks_qwen3_v1}"
+      EMBEDDING_DENSE_URL: http://dense-embedding:80
+      EMBEDDING_DENSE_MODEL: "${EMBEDDING_DENSE_MODEL:-Qwen/Qwen3-Embedding-0.6B}"
+      EMBEDDING_DENSE_REVISION: "${EMBEDDING_DENSE_REVISION:-97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3}"
+      EMBEDDING_DENSE_DIMENSION: "${EMBEDDING_DENSE_DIMENSION:-1024}"
+      EMBEDDING_SPARSE_MODEL: "${EMBEDDING_SPARSE_MODEL:-Qdrant/bm25}"
+      EMBEDDING_CACHE_DIR: /models/fastembed
+      EMBEDDING_BATCH_SIZE: "${EMBEDDING_BATCH_SIZE:-4}"
+      CLOVA_STUDIO_API_KEY: "${CLOVA_STUDIO_API_KEY:?set CLOVA_STUDIO_API_KEY}"
+      CLOVA_STUDIO_BASE_URL: "${CLOVA_STUDIO_BASE_URL:-https://clovastudio.stream.ntruss.com}"
+      CLOVA_STUDIO_MODEL: "${CLOVA_STUDIO_MODEL:-HCX-007}"
+      CLOVA_STUDIO_TIMEOUT_SECONDS: "${CLOVA_STUDIO_TIMEOUT_SECONDS:-90}"
+      CLOVA_STUDIO_MAX_TOKENS: "${CLOVA_STUDIO_MAX_TOKENS:-2400}"
+      CLOVA_STUDIO_SEED: "${CLOVA_STUDIO_SEED:-7}"
+      CLOVA_STUDIO_MAX_CONCURRENCY: "${CLOVA_STUDIO_MAX_CONCURRENCY:-2}"
+      CLOVA_STUDIO_RATE_LIMIT_RETRIES: "${CLOVA_STUDIO_RATE_LIMIT_RETRIES:-2}"
+      CLOVA_VERIFIER_THINKING_EFFORT: "${CLOVA_VERIFIER_THINKING_EFFORT:-medium}"
+    volumes:
+      - sparse_embedding_models:/models/fastembed
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    image: pension-agent-web:0.1.0
+    restart: unless-stopped
+    depends_on:
+      rag-api:
+        condition: service_healthy
+    environment:
+      RAG_API_PROXY_URL: http://rag-api:8080
+    ports:
+      - "${PENSION_WEB_PORT:-3002}:3000"
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  qdrant_data:
+  dense_embedding_models:
+  sparse_embedding_models:

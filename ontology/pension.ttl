@@ -1,0 +1,136 @@
+@prefix pgo: <urn:kr:pension:ontology:> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+<urn:kr:pension:ontology:pension> a owl:Ontology ;
+    dcterms:title "Korean Pension Domain Ontology"@en,
+        "한국 연금 도메인 온톨로지"@ko ;
+    owl:versionInfo "0.2.0" .
+
+### Pension schemes and accounts #############################################
+
+pgo:PensionScheme a owl:Class ; rdfs:label "연금제도"@ko .
+pgo:PersonalPensionScheme a owl:Class ;
+    rdfs:subClassOf pgo:PensionScheme ; rdfs:label "개인연금제도"@ko .
+pgo:RetirementPensionScheme a owl:Class ;
+    rdfs:subClassOf pgo:PensionScheme ; rdfs:label "퇴직연금제도"@ko .
+pgo:DefinedBenefitPension a owl:Class ;
+    rdfs:subClassOf pgo:RetirementPensionScheme ;
+    rdfs:label "확정급여형 퇴직연금"@ko ; skos:altLabel "DB"@ko .
+pgo:DefinedContributionPension a owl:Class ;
+    rdfs:subClassOf pgo:RetirementPensionScheme ;
+    rdfs:label "확정기여형 퇴직연금"@ko ; skos:altLabel "DC"@ko .
+pgo:IndividualRetirementPension a owl:Class ;
+    rdfs:subClassOf pgo:RetirementPensionScheme, pgo:FinancialAccount ;
+    rdfs:label "개인형 퇴직연금"@ko ; skos:altLabel "IRP"@ko, "개인IRP"@ko .
+pgo:PensionSavingsAccount a owl:Class ;
+    rdfs:subClassOf pgo:PersonalPensionScheme, pgo:FinancialAccount ;
+    rdfs:label "연금저축계좌"@ko .
+pgo:LegacyPersonalPensionSavings a owl:Class ;
+    rdfs:subClassOf pgo:PersonalPensionScheme, pgo:FinancialAccount ;
+    rdfs:label "개인연금저축"@ko .
+pgo:SmallBusinessRetirementPensionFund a owl:Class ;
+    rdfs:subClassOf pgo:RetirementPensionScheme ;
+    rdfs:label "중소기업퇴직연금기금제도"@ko .
+pgo:DefinedBenefitPension owl:disjointWith pgo:DefinedContributionPension .
+
+### Actor roles ###############################################################
+
+pgo:Subscriber a owl:Class ; rdfs:subClassOf pgo:PersonRole ; rdfs:label "가입자"@ko .
+pgo:Employee a owl:Class ; rdfs:subClassOf pgo:PersonRole ; rdfs:label "근로자"@ko .
+pgo:Employer a owl:Class ; rdfs:subClassOf pgo:PersonRole ; rdfs:label "사용자"@ko, "회사"@ko .
+pgo:Beneficiary a owl:Class ; rdfs:subClassOf pgo:PersonRole ; rdfs:label "수급자"@ko .
+pgo:Dependent a owl:Class ; rdfs:subClassOf pgo:PersonRole ; rdfs:label "부양가족"@ko .
+pgo:SelfEmployedPerson a owl:Class ; rdfs:subClassOf pgo:PersonRole ; rdfs:label "자영업자"@ko .
+pgo:FinancialInstitution a owl:Class ; rdfs:subClassOf pgo:Organization ; rdfs:label "금융기관"@ko .
+pgo:RetirementPensionProvider a owl:Class ; rdfs:subClassOf pgo:FinancialInstitution ; rdfs:label "퇴직연금사업자"@ko .
+
+### Events and balances #######################################################
+
+pgo:Contribution a owl:Class ; rdfs:subClassOf pgo:FinancialEvent ; rdfs:label "부담금 납입"@ko .
+pgo:AdditionalContribution a owl:Class ; rdfs:subClassOf pgo:Contribution ; rdfs:label "추가납입"@ko .
+pgo:BenefitPayment a owl:Class ; rdfs:subClassOf pgo:FinancialEvent ; rdfs:label "급여 지급"@ko .
+pgo:PensionPayment a owl:Class ; rdfs:subClassOf pgo:BenefitPayment ; rdfs:label "연금수령"@ko .
+pgo:LumpSumPayment a owl:Class ; rdfs:subClassOf pgo:BenefitPayment ; rdfs:label "일시금 수령"@ko .
+pgo:Withdrawal a owl:Class ; rdfs:subClassOf pgo:FinancialEvent ; rdfs:label "인출"@ko .
+pgo:EarlyWithdrawal a owl:Class ; rdfs:subClassOf pgo:Withdrawal ; rdfs:label "중도인출"@ko .
+pgo:AccountTermination a owl:Class ; rdfs:subClassOf pgo:FinancialEvent ; rdfs:label "계좌 해지"@ko .
+pgo:AccountTransfer a owl:Class ; rdfs:subClassOf pgo:FinancialEvent ; rdfs:label "계약이전"@ko, "계좌이체"@ko .
+pgo:AccountSuccession a owl:Class ; rdfs:subClassOf pgo:FinancialEvent ; rdfs:label "계좌 승계"@ko .
+pgo:PensionCommencement a owl:Class ; rdfs:subClassOf pgo:FinancialEvent ; rdfs:label "연금개시"@ko .
+pgo:Rebalancing a owl:Class ; rdfs:subClassOf pgo:FinancialEvent ; rdfs:label "리밸런싱"@ko .
+pgo:DeferredRetirementIncome a owl:Class ; rdfs:label "이연퇴직소득"@ko .
+pgo:TaxDeductedContribution a owl:Class ; rdfs:label "세액공제 받은 납입금"@ko .
+pgo:NonDeductedContribution a owl:Class ; rdfs:label "세액공제 받지 않은 납입금"@ko .
+pgo:InvestmentReturn a owl:Class ; rdfs:label "운용수익"@ko .
+
+### Investment products ######################################################
+
+pgo:InvestmentProduct a owl:Class ; rdfs:subClassOf pgo:FinancialProduct ; rdfs:label "운용상품"@ko .
+pgo:PrincipalProtectedProduct a owl:Class ; rdfs:subClassOf pgo:InvestmentProduct ; rdfs:label "원리금보장상품"@ko .
+pgo:RiskAsset a owl:Class ; rdfs:subClassOf pgo:InvestmentProduct ; rdfs:label "위험자산"@ko .
+pgo:Fund a owl:Class ; rdfs:subClassOf pgo:InvestmentProduct ; rdfs:label "펀드"@ko .
+pgo:MoneyMarketFund a owl:Class ; rdfs:subClassOf pgo:Fund ; rdfs:label "단기금융집합투자기구"@ko ; skos:altLabel "MMF"@ko .
+pgo:TargetDateFund a owl:Class ; rdfs:subClassOf pgo:Fund ; rdfs:label "타깃데이트펀드"@ko ; skos:altLabel "TDF"@ko .
+pgo:ExchangeTradedFund a owl:Class ; rdfs:subClassOf pgo:Fund ; rdfs:label "상장지수펀드"@ko ; skos:altLabel "ETF"@ko .
+pgo:ExchangeTradedNote a owl:Class ; rdfs:subClassOf pgo:InvestmentProduct ; rdfs:label "상장지수증권"@ko ; skos:altLabel "ETN"@ko .
+pgo:RealEstateInvestmentTrust a owl:Class ; rdfs:subClassOf pgo:InvestmentProduct ; rdfs:label "부동산투자회사"@ko ; skos:altLabel "리츠"@ko, "REIT"@en .
+pgo:Bond a owl:Class ; rdfs:subClassOf pgo:InvestmentProduct ; rdfs:label "채권"@ko .
+pgo:DefaultOption a owl:Class ; rdfs:subClassOf pgo:InvestmentProduct ; rdfs:label "사전지정운용방법"@ko ; skos:altLabel "디폴트옵션"@ko .
+
+### Tax and legal concepts ####################################################
+
+pgo:Tax a owl:Class ; rdfs:label "세금"@ko .
+pgo:PensionIncomeTax a owl:Class ; rdfs:subClassOf pgo:Tax ; rdfs:label "연금소득세"@ko .
+pgo:RetirementIncomeTax a owl:Class ; rdfs:subClassOf pgo:Tax ; rdfs:label "퇴직소득세"@ko .
+pgo:OtherIncomeTax a owl:Class ; rdfs:subClassOf pgo:Tax ; rdfs:label "기타소득세"@ko .
+pgo:InterestIncomeTax a owl:Class ; rdfs:subClassOf pgo:Tax ; rdfs:label "이자소득세"@ko .
+pgo:TaxDeduction a owl:Class ; rdfs:label "세액공제"@ko .
+pgo:TaxDeferral a owl:Class ; rdfs:label "과세이연"@ko .
+pgo:SeparateTaxation a owl:Class ; rdfs:label "분리과세"@ko .
+pgo:ComprehensiveTaxation a owl:Class ; rdfs:label "종합과세"@ko .
+pgo:UnavoidableReason a owl:Class ; rdfs:subClassOf pgo:Condition ; rdfs:label "세법상 부득이한 사유"@ko .
+pgo:StatutoryWithdrawalReason a owl:Class ; rdfs:subClassOf pgo:Condition ; rdfs:label "법정 중도인출 사유"@ko .
+
+### Domain relations #########################################################
+
+pgo:eligibleFor a owl:ObjectProperty ;
+    rdfs:domain pgo:PersonRole ; rdfs:range pgo:PensionScheme ; rdfs:label "가입할 수 있음"@ko .
+pgo:holdsAccount a owl:ObjectProperty ;
+    rdfs:domain pgo:PersonRole ; rdfs:range pgo:FinancialAccount ; rdfs:label "계좌를 보유함"@ko .
+pgo:contributesTo a owl:ObjectProperty ;
+    rdfs:domain pgo:PersonRole ; rdfs:range pgo:FinancialAccount ; rdfs:label "계좌에 납입함"@ko .
+pgo:allowsInvestmentIn a owl:ObjectProperty ;
+    rdfs:domain pgo:PensionScheme ; rdfs:range pgo:InvestmentProduct ; rdfs:label "투자를 허용함"@ko .
+pgo:prohibitsInvestmentIn a owl:ObjectProperty ;
+    rdfs:domain pgo:PensionScheme ; rdfs:range pgo:InvestmentProduct ; rdfs:label "투자를 금지함"@ko .
+pgo:allowsEvent a owl:ObjectProperty ;
+    rdfs:domain pgo:PensionScheme ; rdfs:range pgo:FinancialEvent ; rdfs:label "업무를 허용함"@ko .
+pgo:prohibitsEvent a owl:ObjectProperty ;
+    rdfs:domain pgo:PensionScheme ; rdfs:range pgo:FinancialEvent ; rdfs:label "업무를 금지함"@ko .
+pgo:permitsEvent a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:FinancialEvent ; rdfs:label "규칙이 업무를 허용함"@ko .
+pgo:forbidsEvent a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:FinancialEvent ; rdfs:label "규칙이 업무를 금지함"@ko .
+pgo:requiresEvent a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:FinancialEvent ; rdfs:label "규칙이 업무를 요구함"@ko .
+pgo:permitsInvestment a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:InvestmentProduct ; rdfs:label "규칙이 투자를 허용함"@ko .
+pgo:forbidsInvestment a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:InvestmentProduct ; rdfs:label "규칙이 투자를 금지함"@ko .
+pgo:imposesTax a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:Tax ; rdfs:label "규칙이 세금을 부과함"@ko .
+pgo:exemptsTax a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:Tax ; rdfs:label "규칙이 세금을 면제함"@ko .
+pgo:taxedBy a owl:ObjectProperty ;
+    rdfs:domain pgo:FinancialEvent ; rdfs:range pgo:Tax ; rdfs:label "세금이 적용됨"@ko .
+pgo:governedBy a owl:ObjectProperty ;
+    rdfs:range pgo:LegalInstrument ; rdfs:label "법령의 적용을 받음"@ko .
+pgo:calculatedBy a owl:ObjectProperty ;
+    rdfs:range pgo:CalculationRule ; rdfs:label "계산 규칙을 따름"@ko .
+pgo:requiresDocument a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:RequiredDocument ; rdfs:label "업무에 서류가 필요함"@ko .
+pgo:availableVia a owl:ObjectProperty ;
+    rdfs:domain pgo:Rule ; rdfs:range pgo:ServiceChannel ; rdfs:label "업무를 처리할 수 있는 채널"@ko .

@@ -1,0 +1,174 @@
+@prefix pgo: <urn:kr:pension:ontology:> .
+@prefix pgr: <urn:kr:pension:resource:> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# This is an explicit ingestion profile, not an OWL closed-world assumption.
+# Load core.ttl + pension.ttl + product.ttl as ontology, and shapes.ttl + this
+# file as the shape graph. Passing these checks never promotes assertion status.
+
+pgo:ProductFundShape a sh:NodeShape ;
+    sh:targetClass pgo:Fund ; sh:closed false ;
+    sh:not [ sh:class pgo:ShareClass ] ;
+    sh:property [ sh:path pgo:fundCode ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] .
+pgo:ProductShareClassShape a sh:NodeShape ;
+    sh:targetClass pgo:ShareClass ; sh:closed false ;
+    sh:not [ sh:class pgo:Fund ] ;
+    sh:property [ sh:path pgo:shareClassCode ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:shareClassOf ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:Fund ] .
+pgo:ProductDocumentVersionShape a sh:NodeShape ;
+    sh:targetClass pgo:DocumentVersion ; sh:closed false ;
+    sh:property [ sh:path pgo:sourceId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:checksum ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^[0-9a-f]{64}$" ] ;
+    sh:property [ sh:path dcterms:title ; sh:minCount 1 ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:versionOf ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:InformationResource ] ;
+    sh:property [ sh:path pgo:asOfDate ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path pgo:documentEffectiveDate ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path pgo:describesFund ; sh:class pgo:Fund ] .
+
+pgo:ProductObservationShape a sh:NodeShape ;
+    sh:targetClass pgo:ProductObservation ; sh:closed false ;
+    sh:xone (
+        [ sh:class pgo:AccountEligibility ] [ sh:class pgo:ProductClassification ]
+        [ sh:class pgo:FeeObservation ] [ sh:class pgo:ReturnObservation ]
+        [ sh:class pgo:RiskObservation ] [ sh:class pgo:AUMObservation ]
+    ) ;
+    sh:property [ sh:path pgo:assertionId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:statementText ; sh:minCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:observedSubject ; sh:minCount 1 ; sh:maxCount 1 ; sh:or ( [ sh:class pgo:Fund ] [ sh:class pgo:ShareClass ] ) ] ;
+    sh:property [ sh:path pgo:asOfDate ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path pgo:sourceDocumentVersion ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:DocumentVersion ] ;
+    sh:property [ sh:path pgo:hasStatus ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( pgr:Candidate pgr:NeedsReview pgr:Validated pgr:Rejected pgr:Superseded ) ] ;
+    sh:property [ sh:path pgo:supportedBy ; sh:minCount 1 ; sh:class pgo:EvidenceSpan ; sh:node pgo:ProductBoundEvidenceShape ] ;
+    sh:property [ sh:path pgo:observedValue ; sh:maxCount 1 ; sh:class pgo:QuantifiedValue ; sh:node pgo:ProductQuantityShape ] ;
+    sh:property [ sh:path pgo:observedPeriod ; sh:maxCount 1 ; sh:class pgo:TemporalExtent ; sh:node pgo:ProductMeasurementPeriodShape ] ;
+    sh:property [ sh:path pgo:scopeText ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:validFrom ; sh:maxCount 1 ; sh:datatype xsd:date ; sh:lessThanOrEquals pgo:validThrough ] ;
+    sh:property [ sh:path pgo:validThrough ; sh:maxCount 1 ; sh:datatype xsd:date ] ;
+    sh:property [ sh:path pgo:contradicts ; sh:class pgo:Assertion ] ;
+    sh:property [ sh:path pgo:supersedes ; sh:class pgo:Assertion ] ;
+    sh:sparql [
+        sh:message "관측의 원문 버전과 근거의 원문 버전이 다릅니다."@ko ;
+        sh:select """
+            PREFIX pgo: <urn:kr:pension:ontology:>
+            SELECT $this WHERE {
+                $this pgo:sourceDocumentVersion ?version ; pgo:supportedBy ?evidence .
+                ?evidence pgo:partOfDocument ?evidenceVersion .
+                FILTER (?version != ?evidenceVersion)
+            }
+        """
+    ] .
+
+# Nested shape only: it does not require new product fields on system evidence.
+pgo:ProductBoundEvidenceShape a sh:NodeShape ; sh:closed false ;
+    sh:property [ sh:path pgo:quote ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 2 ] ;
+    sh:property [ sh:path pgo:inChunk ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:TextChunk ] ;
+    sh:property [ sh:path pgo:partOfDocument ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:DocumentVersion ] ;
+    sh:property [ sh:path pgo:startChar ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:nonNegativeInteger ; sh:lessThan pgo:endChar ] ;
+    sh:property [ sh:path pgo:endChar ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:nonNegativeInteger ] ;
+    sh:property [ sh:path pgo:sourceLocator ; sh:minCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:evidenceOrigin ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( pgr:SourceTranscription pgr:ReviewedVisualTranscription ) ] ;
+    sh:sparql [
+        sh:message "근거 구간과 소속 청크가 같은 원문 버전을 가리켜야 합니다."@ko ;
+        sh:select """
+            PREFIX pgo: <urn:kr:pension:ontology:>
+            SELECT $this WHERE {
+                $this pgo:partOfDocument ?version ; pgo:inChunk ?chunk .
+                ?chunk pgo:partOfDocument ?chunkVersion .
+                FILTER (?version != ?chunkVersion)
+            }
+        """
+    ] .
+
+pgo:ProductQuantityShape a sh:NodeShape ;
+    sh:property [ sh:path pgo:numericValue ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+    sh:property [ sh:path pgo:unitCode ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:rawValue ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:comparisonOperator ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^(EQ|GT|GTE|LT|LTE|APPROX)$" ] .
+
+pgo:ProductMeasurementPeriodShape a sh:NodeShape ;
+    sh:property [ sh:path pgo:validFrom ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:date ; sh:lessThanOrEquals pgo:validThrough ] ;
+    sh:property [ sh:path pgo:validThrough ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:date ] .
+
+pgo:ProductAccountEligibilityShape a sh:NodeShape ;
+    sh:targetClass pgo:AccountEligibility ;
+    sh:property [ sh:path pgo:observedSubject ; sh:class pgo:ShareClass ] ;
+    sh:property [ sh:path pgo:accountType ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:DomainConcept ; sh:node [
+        sh:property [ sh:path pgo:denotesClass ; sh:minCount 1 ; sh:maxCount 1 ; sh:in (
+            pgo:IndividualRetirementPension pgo:PensionSavingsAccount
+            pgo:DefinedBenefitPension pgo:DefinedContributionPension
+            pgo:LegacyPersonalPensionSavings pgo:SmallBusinessRetirementPensionFund
+        ) ]
+    ] ] ;
+    sh:property [ sh:path pgo:eligibilityOutcome ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^(PERMITTED|PROHIBITED|CONDITIONAL|NOT_DISCLOSED|NOT_APPLICABLE)$" ] ;
+    sh:or (
+        [ sh:not [ sh:property [ sh:path pgo:eligibilityOutcome ; sh:pattern "^CONDITIONAL$" ] ] ]
+        [ sh:property [ sh:path pgo:scopeText ; sh:minCount 1 ; sh:minLength 1 ] ]
+    ) .
+
+pgo:ProductClassificationShape a sh:NodeShape ;
+    sh:targetClass pgo:ProductClassification ;
+    sh:property [ sh:path pgo:classificationAxis ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^(PRODUCT_WRAPPER|ASSET_CLASS|PENSION_MANAGEMENT|STRATEGY)$" ] ;
+    sh:property [ sh:path pgo:category ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:DomainConcept ] .
+
+pgo:ProductFeeObservationShape a sh:NodeShape ;
+    sh:targetClass pgo:FeeObservation ;
+    sh:property [ sh:path pgo:observedSubject ; sh:class pgo:ShareClass ] ;
+    sh:property [ sh:path pgo:observedValue ; sh:minCount 1 ] ;
+    sh:property [ sh:path pgo:feeType ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:property [ sh:path pgo:feeBasis ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^(ANNUAL_RATE|ONE_OFF_RATE|MONETARY_CHARGE)$" ] ;
+    sh:or (
+        [ sh:property [ sh:path pgo:feeBasis ; sh:pattern "^ANNUAL_RATE$" ] ;
+          sh:property [ sh:path ( pgo:observedValue pgo:unitCode ) ; sh:pattern "^PERCENT_PER_YEAR$" ] ]
+        [ sh:property [ sh:path pgo:feeBasis ; sh:pattern "^ONE_OFF_RATE$" ] ;
+          sh:property [ sh:path ( pgo:observedValue pgo:unitCode ) ; sh:pattern "^PERCENT$" ] ]
+        [ sh:property [ sh:path pgo:feeBasis ; sh:pattern "^MONETARY_CHARGE$" ] ;
+          sh:property [ sh:path ( pgo:observedValue pgo:unitCode ) ; sh:pattern "^[A-Z]{3}$" ] ]
+    ) .
+
+pgo:ProductReturnObservationShape a sh:NodeShape ;
+    sh:targetClass pgo:ReturnObservation ;
+    sh:property [ sh:path pgo:observedSubject ; sh:class pgo:ShareClass ] ;
+    sh:property [ sh:path pgo:observedValue ; sh:minCount 1 ; sh:class pgo:Percentage ] ;
+    sh:property [ sh:path ( pgo:observedValue pgo:unitCode ) ; sh:pattern "^PERCENT$" ] ;
+    sh:property [ sh:path pgo:observedPeriod ; sh:minCount 1 ] ;
+    sh:property [ sh:path pgo:returnBasis ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^(PERIOD_CUMULATIVE|ANNUALIZED)$" ] ;
+    sh:property [ sh:path pgo:returnTreatment ; sh:minCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ] ;
+    sh:sparql [
+        sh:message "측정 종료일이 수익률 기준일보다 늦습니다."@ko ;
+        sh:select """
+            PREFIX pgo: <urn:kr:pension:ontology:>
+            SELECT $this WHERE {
+                $this pgo:asOfDate ?asOf ; pgo:observedPeriod/pgo:validThrough ?end .
+                FILTER (?end > ?asOf)
+            }
+        """
+    ] .
+
+pgo:ProductRiskObservationShape a sh:NodeShape ;
+    sh:targetClass pgo:RiskObservation ;
+    sh:property [ sh:path pgo:observedValue ; sh:minCount 1 ] ;
+    sh:property [ sh:path ( pgo:observedValue pgo:unitCode ) ; sh:pattern "^RATING$" ] ;
+    sh:property [ sh:path pgo:ratingScale ; sh:minCount 1 ; sh:maxCount 1 ; sh:class pgo:DomainConcept ; sh:node [
+        sh:property [ sh:path pgo:scaleMinimum ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ; sh:lessThanOrEquals pgo:scaleMaximum ] ;
+        sh:property [ sh:path pgo:scaleMaximum ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:decimal ] ;
+        sh:property [ sh:path pgo:higherRiskDirection ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^(LOWER_NUMBER|HIGHER_NUMBER)$" ]
+    ] ] ;
+    sh:sparql [
+        sh:message "위험등급이 명시한 척도의 범위 밖입니다."@ko ;
+        sh:select """
+            PREFIX pgo: <urn:kr:pension:ontology:>
+            SELECT $this WHERE {
+                $this pgo:observedValue/pgo:numericValue ?value ; pgo:ratingScale ?scale .
+                ?scale pgo:scaleMinimum ?min ; pgo:scaleMaximum ?max .
+                FILTER (?value < ?min || ?value > ?max)
+            }
+        """
+    ] .
+
+pgo:ProductAUMObservationShape a sh:NodeShape ;
+    sh:targetClass pgo:AUMObservation ;
+    sh:property [ sh:path pgo:observedValue ; sh:minCount 1 ; sh:class pgo:MonetaryAmount ] ;
+    sh:property [ sh:path ( pgo:observedValue pgo:unitCode ) ; sh:pattern "^[A-Z]{3}$" ] ;
+    sh:property [ sh:path pgo:aumMeasure ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:pattern "^(NET_ASSETS|TOTAL_ASSETS|PRINCIPAL_AMOUNT)$" ] .
